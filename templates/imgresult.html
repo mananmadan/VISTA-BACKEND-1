@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="content">
+	{% if tasks|length < 1 %}
+    	<h4 style="text-align: center">There are no tasks. Create one below!</h4>
+    	{% else %}
+    		<table>
+        		<tr>
+            			<th>Image Label</th>
+            			<th>Score</th>
+        		</tr>
+        		{% for task in tasks %}
+            		<tr>
+                		<td>{{ task }}</td>
+                		<td>
+                    			<a href="/delete/{{task.id}}">Delete</a>
+                    			<br>
+                    			<a href="/update/{{task.id}}">Update</a>
+                		</td>
+            		</tr>
+        	{% endfor %}
+    		</table>
+    	{% endif %}
+    	
+</div>
+{% endblock %}
