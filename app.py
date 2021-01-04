@@ -11,16 +11,15 @@ import pickle
 import requests
 import wikipedia
 import networkx as nx
-from googlesearch import search
+from googlesearch import *
 import json
 import requests
 import urllib
-
-from firebase import firebase
+#from firebase import firebase
 
 import json
 
-firebase = firebase.FirebaseApplication('https://projectworkapp-fbfec.firebaseio.com', None)
+#firebase = firebase.FirebaseApplication('https://projectworkapp-fbfec.firebaseio.com', None)
      	
 #import matplotlib.pyplot as plt
 Graph={}
@@ -50,12 +49,13 @@ app=Flask(__name__)
 def data_to_list(data):
 
     pst = PunktSentenceTokenizer()
-    data=data.decode('utf-8')
+    data=data#.decode('utf-8')
     tokenized_sentence = pst.tokenize(data)
     stringlist = []
     for i in tokenized_sentence:
       try:
         words = nltk.word_tokenize(i)
+        #print(i)
         tagged = nltk.pos_tag(words)
         chunkGram = r"""Chunk: {<JJ.?>{0,2}<VBG>{0,1}<NN.?>{1,2}<VBG>{0,1}<NN..?>{0,2}<VBG>{0,1}}"""
         chunkParser = nltk.RegexpParser(chunkGram)
@@ -72,7 +72,11 @@ def data_to_list(data):
      String = f
      #print(len(String))
      chunklist = []
+     String = String.decode("utf-8")
+     print(String)
      iter = re.finditer(r"\Chunk\b", String)
+     #print(iter)
+     #print(iter)
      indices = [m.start(0) for m in iter]
      #print(indices)
      for x in indices:
@@ -82,7 +86,7 @@ def data_to_list(data):
       j=1
       temp =""
       while(stringlist[index][x+5+j]!=')'):
-       temp = temp + stringlist[index][x+5+j]
+       temp = temp + str(stringlist[index][x+5+j])
        j = j+1
      # print(temp)
       chunklist.append(temp)
@@ -145,10 +149,11 @@ def onotology(task_content,imageTag,tokenpost,keya):
             else:
                 new_string = new_string + i
         print(["New string",new_string])
-        new_string = new_string.encode('ascii', 'ignore').decode('ascii').encode("utf-8")
+        print(type(new_string))
+        #new_string = new_string.encode('ascii', 'ignore').decode('ascii').encode("utf-8")
+        #print("After encoding",type(new_string))
         #new_string= str(new_string).encode('utf-8')
         print("Added to renamed_nodes {}".format(new_string))
-
         res = requests.get("https://en.wikipedia.org/wiki/"+new_string)
         soup = bs(res.text, "html.parser")
         wikidata = []
@@ -185,6 +190,11 @@ def onotology(task_content,imageTag,tokenpost,keya):
             SERVICE wikibase:label { bd:serviceParam wikibase:language "en" }
         }
         """
+        #print("hello:",str(type(id)))
+        if str(type(id)) == str(type(b'12')):
+            id = id.decode("utf-8")
+        
+
         q=re.sub(r"Q245652",id,q)
         #q=re.sub(r"P361",prop,q)
 
@@ -205,6 +215,10 @@ def onotology(task_content,imageTag,tokenpost,keya):
             SERVICE wikibase:label { bd:serviceParam wikibase:language "en" }
         }
         """
+        
+        if str(type(id)) == str(type(b'12')):
+            id = id.decode("utf-8")
+        
         q=re.sub(r"Q245652",id,q)
         sparql.setQuery(q)
 
@@ -225,9 +239,10 @@ def onotology(task_content,imageTag,tokenpost,keya):
             Graph[node]=[]
         if not results_df.empty:
             for x,y in zip(results_df["item.value"] , results_df["itemLabel.value"] ) :
-                x=x.encode("utf-8")
-                y=y.encode("utf-8")
-                print(y)
+                x=x
+                y=y
+                print(type(y))
+                print(type(x))
                 x=re.sub(r"http://www.wikidata.org/entity/","",x)
                 if y not in Graph[node]:
                     if y!=node:
@@ -246,8 +261,13 @@ def onotology(task_content,imageTag,tokenpost,keya):
             Graph[node]=[]
         if not results_df.empty:
             for x,y in zip(results_df["item.value"] , results_df["itemLabel.value"] ) :
-                x=x.encode("utf-8")
-                y=y.encode("utf-8")
+
+                if str(type(x)) == str(type(b'12')):
+                   x = x.decode("utf-8")
+                if str(type(y)) == str(type(b'12')):
+                   y = y.decode("utf-8")
+                #x=x.encode("utf-8")
+                #y=y.encode("utf-8")
                 x=re.sub(r"http://www.wikidata.org/entity/","",x)
                 print(y)
                 if y not in Graph:
@@ -263,10 +283,14 @@ def onotology(task_content,imageTag,tokenpost,keya):
         fout=open(filename,"w")
         for x in Graph:
             #x=x.encode("utf-8")
+            if str(type(x)) == str(type(b'12')):
+                   x = x.decode("utf-8")
             fout.write(x)
             fout.write("\n")
             for y in Graph[x]:
                 #y=y.encode("utf-8")
+                if str(type(y)) == str(type(b'12')):
+                   y = y.decode("utf-8")
                 fout.write(y)
                 fout.write("\n")
             fout.write("-1\n")
@@ -393,7 +417,7 @@ def index():
     if request.method == 'POST':
         #change to url after creating function
         
- 	result = firebase.get('/data', None)
+ 	#result = firebase.get('/data', None)
         imageTag=result['imageTag']
         tokenpost=result['token']
         keya=result['key']
@@ -449,21 +473,21 @@ def localize_objects_uri(uri):
             print(' - ({}, {})'.format(vertex.x, vertex.y))
 
         
-@app.route('/about/',methods=['POST', 'GET'])
-def about():
-"""
-	if request.method == 'POST':
-        	imageUrl=request.form['images_url']
-        	localize_objects_uri(imageUrl)
-        	return redirect('/about/')	
-	else:
-		return render_template('about.html')
-"""
+#@app.route('/about/',methods=['POST', 'GET'])
+#def about():
+#'''
+#	if request.method == 'POST':
+#        	imageUrl=request.form['images_url']
+#        	localize_objects_uri(imageUrl)
+#        	return redirect('/about/')	
+#	else:
+#		return render_template('about.html')
+#
 
 
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
     #app.run(debug=True)
-    task_content="Artificial intelligence (AI) refers to the simulation of human intelligence in machines that are programmed to think like humans and mimic their actions. The term may also be applied to any machine that exhibits traits associated with a human mind such as learning and problem-solving. The ideal characteristic of artificial intelligence is its ability to rationalize and take actions that have the best chance of achieving a specific goal."
-    imageTag= "Robot"
-    onotology(task_content,imageTag,tokenpost,keya)
+task_content = "Artificial intelligence (AI) refers to the simulation of human intelligence in machines that are programmed to think like humans and mimic their actions. The term may also be applied to any machine that exhibits traits associated with a human mind such as learning and problem-solving. The ideal characteristic of artificial intelligence is its ability to rationalize and take actions that have the best chance of achieving a specific goal."
+imageTag= "Robot"
+onotology(task_content,imageTag,tokenpost,keya)
